@@ -21,6 +21,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -31,9 +33,10 @@ import com.google.api.services.analytics.AnalyticsScopes;
 import com.google.api.services.analytics.model.Accounts;
 import com.google.api.services.analytics.model.GaData;
 import com.google.api.services.analytics.model.GaData.ColumnHeaders;
+import com.google.api.services.analytics.model.GaData.Query;
 import com.google.api.services.analytics.model.Profiles;
 import com.google.api.services.analytics.model.Webproperties;
-
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -65,13 +68,13 @@ public class HelloAnalyticsApiSample {
    * Global instance of the {@link DataStoreFactory}. The best practice is to make it a single
    * globally shared instance across your application.
    */
-  private static FileDataStoreFactory dataStoreFactory;
+  private static FileDataStoreFactory DATA_STORE_FACTORY;
 
   /** Global instance of the HTTP transport. */
-  private static HttpTransport httpTransport;
+  private static HttpTransport HTTP_TRANSPORT;
 
   /** Global instance of the JSON factory. */
-  private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
   /**
    * Main demo. This first initializes an analytics service object. It then uses the Google
@@ -83,15 +86,19 @@ public class HelloAnalyticsApiSample {
    */
   public static void main(String[] args) {
     try {
-      httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-      dataStoreFactory = new FileDataStoreFactory(DATA_STORE_DIR);
+      HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+      DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
       Analytics analytics = initializeAnalytics();
       String profileId = getFirstProfileId(analytics);
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        GaData gaData = executeDataQuery(analytics, profileId);
-        printGaData(gaData);
+        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", "ga:timeOnSite", "ga:pagepathlevel3, ga:visitLength", "-ga:visitLength");
+        writeToCSV(data);
+        printGaData(data);
+        printQueryInfo(data);
+        printPaginationInfo(data);
+        printResponseInfo(data);
       }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
@@ -116,9 +123,9 @@ public class HelloAnalyticsApiSample {
     }
     // set up authorization code flow
     GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-        httpTransport, JSON_FACTORY, clientSecrets,
+        HTTP_TRANSPORT, JSON_FACTORY, clientSecrets,
         Collections.singleton(AnalyticsScopes.ANALYTICS_READONLY)).setDataStoreFactory(
-        dataStoreFactory).build();
+        DATA_STORE_FACTORY).build();
     // authorize
     return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
   }
@@ -135,7 +142,7 @@ public class HelloAnalyticsApiSample {
     Credential credential = authorize();
 
     // Set up and return Google Analytics API client.
-    return new Analytics.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName(
+    return new Analytics.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(
         APPLICATION_NAME).build();
   }
 
@@ -183,27 +190,66 @@ public class HelloAnalyticsApiSample {
     return profileId;
   }
 
-  /**
-   * Returns the top 25 organic search keywords and traffic source by visits. The Core Reporting API
-   * is used to retrieve this data.
-   *
-   * @param analytics the analytics service object used to access the API.
-   * @param profileId the profile ID from which to retrieve data.
-   * @return the response from the API.
-   * @throws IOException tf an API error occured.
-   */
-  private static GaData executeDataQuery(Analytics analytics, String profileId) throws IOException {
-    return analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
-        "2012-01-01", // Start date.
-        "2012-01-14", // End date.
-        "ga:visits") // Metrics.
-        .setDimensions("ga:source,ga:keyword")
-        .setSort("-ga:visits,ga:source")
-        .setFilters("ga:medium==organic")
-        .setMaxResults(25)
+//  /**
+//   * Returns the top 25 organic search keywords and traffic source by visits. The Core Reporting API
+//   * is used to retrieve this data.
+//   *
+//   * @param analytics the analytics service object used to access the API.
+//   * @param profileId the profile ID from which to retrieve data.
+//   * @return the response from the API.
+//   * @throws IOException tf an API error occured.
+//   */
+//  private static GaData executeDataQuery(Analytics analytics, String profileId) throws IOException {
+//    return analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
+//  "2009-01-01", // Start date.
+//  "2013-12-31", // End date.
+//  "ga:totalevents") // Metrics.
+//  .setMaxResults(25)
+//  .execute();
+//  }
+  
+  private static GaData executeDataQuery(Analytics analytics, String profileId, String startDate, String endDate, String metrics, String dimensions, String sort) throws IOException {
+    GaData data = analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
+        startDate, // Start date.
+        endDate, // End date.
+        metrics) // Metrics.
+        .setDimensions(dimensions)
+        .setSort(sort)
+        .setMaxResults(10)
         .execute();
+    
+    if (data.getNextLink() != null) {
+      GenericUrl url = new GenericUrl(data.getNextLink());
+      HttpResponse response = analytics.getRequestFactory().buildGetRequest(url).execute();
+        System.out.println("Next 10");
+        System.out.println(response.parseAsString());
+    }
+    
+    return data;
   }
+  
+  private static void writeToCSV(GaData results) throws IOException{
+    FileWriter writer = new FileWriter("test.csv");
+    if (results.getRows() == null || results.getRows().isEmpty()) {
+      System.out.println("No results Found.");
+    }
+    else {
+      for (ColumnHeaders header : results.getColumnHeaders()) {
+        writer.append(header.getName() + ",");
+      }
+      writer.append('\n');
+      for (List<String> row : results.getRows()) {
+        for (String column : row) {
+          writer.append(column + ",");
+        }
+        writer.append('\n');
+      }      
+    }
 
+    writer.flush();
+    writer.close();
+  }
+  
   /**
    * Prints the output from the Core Reporting API. The profile name is printed along with each
    * column name and all the data in the rows.
@@ -234,5 +280,34 @@ public class HelloAnalyticsApiSample {
 
       System.out.println();
     }
+  }
+  
+  private static void printResponseInfo(GaData gaData) {
+    System.out.println("Contains Sampled Data: " + gaData.getContainsSampledData());
+    System.out.println("Kind: " + gaData.getKind());
+    System.out.println("ID:" + gaData.getId());
+    System.out.println("Self link: " + gaData.getSelfLink());
+  }
+  
+  private static void printQueryInfo(GaData gaData) {
+    Query query = gaData.getQuery();
+
+    System.out.println("Ids: " + query.getIds());
+    System.out.println("Start Date: " + query.getStartDate());
+    System.out.println("End Date: " + query.getEndDate());
+    System.out.println("Metrics: " + query.getMetrics()); // List
+    System.out.println("Dimensions: " + query.getDimensions());
+    System.out.println("Sort: " + query.getSort()); // List
+    System.out.println("Segment: " + query.getSegment());
+    System.out.println("Filters: " + query.getFilters());
+    System.out.println("Start Index: " + query.getStartIndex());
+    System.out.println("Max Results: " + query.getMaxResults());
+  }
+  
+  private static void printPaginationInfo(GaData gaData) {
+    System.out.println("Items Per Page: " + gaData.getItemsPerPage());
+    System.out.println("Total Results: " + gaData.getTotalResults());
+    System.out.println("Previous Link: " + gaData.getPreviousLink());
+    System.out.println("Next Link: " + gaData.getNextLink());
   }
 }
