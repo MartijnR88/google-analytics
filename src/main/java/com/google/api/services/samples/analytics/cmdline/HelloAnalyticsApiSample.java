@@ -58,7 +58,7 @@ public class HelloAnalyticsApiSample {
    * Be sure to specify the name of your application. If the application name is {@code null} or
    * blank, the application will log a warning. Suggested format is "MyCompany-ProductName/1.0".
    */
-  private static final String APPLICATION_NAME = "";
+  private static final String APPLICATION_NAME = "Thesis";
 
   /** Directory to store user credentials. */
   private static final java.io.File DATA_STORE_DIR =
@@ -75,6 +75,12 @@ public class HelloAnalyticsApiSample {
 
   /** Global instance of the JSON factory. */
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+  
+  /**Maximum of 10 metrics per request */
+  private static final String metrics = "ga:adClicks,ga:adCost,ga:appviews,ga:appviewsPerVisit,ga:avgDomainLookupTime,ga:avgDomContentLoadedTime,ga:avgDomInteractiveTime,ga:avgEventValue,ga:avgPageDownloadTime,ga:avgPageLoadTime,ga:avgRedirectionTime,ga:avgScreenviewDuration,ga:avgSearchDepth,ga:avgSearchDuration,ga:avgSearchResultViews,ga:avgServerConnectionTime,ga:avgServerResponseTime,ga:avgTimeOnPage,ga:avgTimeOnSite,ga:avgUserTimingValue,ga:bounces,ga:costPerConversion,ga:costPerGoalConversion,ga:costPerTransaction,ga:CPC,ga:CPM,ga:CTR,ga:domainLookupTime,ga:domContentLoadedTime,ga:domInteractiveTime,ga:domLatencyMetricsSample,ga:entranceBounceRate,ga:entranceRate,ga:entrances,ga:eventsPerVisitWithEvent,ga:eventValue,ga:exceptions,ga:exceptionsPerScreenview,ga:exitRate,ga:exits,ga:fatalExceptions,ga:fatalExceptionsPerScreenview,ga:goalAbandonRateAll,ga:goalAbandonsAll,ga:goalCompletionsAll,ga:goalConversionRateAll,ga:goalStartsAll,ga:goalValueAll,ga:goalValueAllPerSearch,ga:goalValuePerVisit,ga:goalXXAbandonRate,ga:goalXXAbandons,ga:goalXXCompletions,ga:goalXXConversionRate,ga:goalXXStarts,ga:goalXXValue,ga:impressions,ga:itemQuantity,ga:itemRevenue,ga:itemsPerPurchase,ga:localItemRevenue,ga:localTransactionRevenue,ga:localTransactionShipping,ga:localTransactionTax,ga:margin,ga:metricXX,ga:newVisits,ga:organicSearches,ga:pageDownloadTime,ga:pageLoadSample,ga:pageLoadTime,ga:pageValue,ga:pageviews,ga:pageviewsPerVisit,ga:percentNewVisits,ga:percentSearchRefinements,ga:percentVisitsWithSearch,ga:redirectionTime,ga:revenuePerItem,ga:revenuePerTransaction,ga:ROI,ga:RPC,ga:screenviews,ga:screenviewsPerSession,ga:searchDepth,ga:searchDuration,ga:searchExitRate,ga:searchExits,ga:searchGoalConversionRateAll,ga:searchGoalXXConversionRate,ga:searchRefinements,ga:searchResultViews,ga:searchUniques,ga:searchVisits,ga:serverConnectionTime,ga:serverResponseTime,ga:socialActivities,ga:socialInteractions,ga:socialInteractionsPerVisit,ga:speedMetricsSample,ga:timeOnPage,ga:timeOnScreen,ga:timeOnSite,ga:totalEvents,ga:totalValue,ga:transactionRevenue,ga:transactionRevenuePerVisit,ga:transactions,ga:transactionShipping,ga:transactionsPerVisit,ga:transactionTax,ga:uniqueAppviews,ga:uniqueEvents,ga:uniquePageviews,ga:uniquePurchases,ga:uniqueScreenviews,ga:uniqueSocialInteractions,ga:userTimingSample,ga:userTimingValue,ga:visitBounceRate,ga:visitors,ga:visits,ga:visitsWithEvent";
+  /**Maximum of 7 dimensions per request */
+  private static final String dimensions = "ga:adContent,ga:adDestinationUrl,ga:adDisplayUrl,ga:adDistributionNetwork,ga:adFormat,ga:adGroup,ga:adMatchedQuery,ga:adMatchType,ga:adPlacementDomain,ga:adPlacementUrl,ga:adSlot,ga:adSlotPosition,ga:adTargetingOption,ga:adTargetingType,ga:adwordsAdGroupID,ga:adwordsCampaignID,ga:adwordsCreativeID,ga:adwordsCriteriaID,ga:adwordsCustomerID,ga:affiliation,ga:appId,ga:appInstallerId,ga:appName,ga:appVersion,ga:browser,ga:browserVersion,ga:campaign,ga:city,ga:continent,ga:country,ga:currencyCode,ga:customVarNameXX,ga:customVarValueXX,ga:date,ga:dateHour,ga:day,ga:dayOfWeek,ga:dayOfWeekName,ga:daysSinceLastVisit,ga:daysToTransaction,ga:deviceCategory,ga:dimensionXX,ga:eventAction,ga:eventCategory,ga:eventLabel,ga:exceptionDescription,ga:exitPagePath,ga:exitScreenName,ga:experimentId,ga:experimentVariant,ga:flashVersion,ga:fullReferrer,ga:goalCompletionLocation,ga:goalPreviousStep1,ga:goalPreviousStep2,ga:goalPreviousStep3,ga:hasSocialSourceReferral,ga:hostname,ga:hour,ga:isMobile,ga:isoWeek,ga:isTablet,ga:javaEnabled,ga:keyword,ga:landingPagePath,ga:landingScreenName,ga:language,ga:latitude,ga:longitude,ga:medium,ga:metro,ga:mobileDeviceBranding,ga:mobileDeviceInfo,ga:mobileDeviceMarketingName,ga:mobileDeviceModel,ga:mobileInputSelector,ga:month,ga:networkDomain,ga:networkLocation,ga:nextPagePath,ga:nthDay,ga:nthMonth,ga:nthWeek,ga:operatingSystem,ga:operatingSystemVersion,ga:pageDepth,ga:pagePath,ga:pagePathLevel1,ga:pagePathLevel2,ga:pagePathLevel3,ga:pagePathLevel4,ga:pageTitle,ga:previousPagePath,ga:productCategory,ga:productName,ga:productSku,ga:referralPath,ga:region,ga:screenColors,ga:screenDepth,ga:screenName,ga:screenResolution,ga:searchCategory,ga:searchDestinationPage,ga:searchKeyword,ga:searchKeywordRefinement,ga:searchStartPage,ga:searchUsed,ga:secondPagePath,ga:socialActivityAction,ga:socialActivityContentUrl,ga:socialActivityDisplayName,ga:socialActivityEndorsingUrl,ga:socialActivityNetworkAction,ga:socialActivityPost,ga:socialActivityTagsSummary,ga:socialActivityTimestamp,ga:socialActivityUserHandle,ga:socialActivityUserPhotoUrl,ga:socialActivityUserProfileUrl,ga:socialEngagementType,ga:socialInteractionAction,ga:socialInteractionNetwork,ga:socialInteractionNetworkAction,ga:socialInteractionTarget,ga:socialNetwork,ga:source,ga:sourceMedium,ga:subContinent,ga:transactionId,ga:userDefinedValue,ga:userTimingCategory,ga:userTimingLabel,ga:userTimingVariable,ga:visitCount,ga:visitLength,ga:visitorType,ga:visitsToTransaction,ga:week,ga:year,ga:yearMonth,ga:yearWeek";
+;
 
   /**
    * Main demo. This first initializes an analytics service object. It then uses the Google
@@ -93,7 +99,7 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", "ga:timeOnSite", "ga:pagepathlevel3, ga:visitLength", "-ga:visitLength");
+        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", "ga:visitors, ga:visits", "ga:landingpagepath, ga:date, ga:visitlength", "");
         writeToCSV(data);
         printGaData(data);
         printQueryInfo(data);
@@ -214,14 +220,15 @@ public class HelloAnalyticsApiSample {
         endDate, // End date.
         metrics) // Metrics.
         .setDimensions(dimensions)
-        .setSort(sort)
-        .setMaxResults(10)
+        //.setSort(sort)
+        .setMaxResults(100)
         .execute();
     
     if (data.getNextLink() != null) {
       GenericUrl url = new GenericUrl(data.getNextLink());
       HttpResponse response = analytics.getRequestFactory().buildGetRequest(url).execute();
-        System.out.println("Next 10");
+      data = data.getFactory().fromString(response.parseAsString(), GaData.class); 
+      System.out.println("Next 10");
         System.out.println(response.parseAsString());
     }
     
