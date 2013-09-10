@@ -1,0 +1,3 @@
+{"columnType":"DIMENSION";"dataType":"STRING";"name":"ga:date"},{"columnType":"DIMENSION";"dataType":"STRING";"name":"ga:visitorType"},{"columnType":"METRIC";"dataType":"INTEGER";"name":"ga:visitors"},
+20090620,New Visitor,11,
+20090620,Returning Visitor,3,

@@ -100,8 +100,8 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics, dimensions, "");
-        //GaData data = executeDataQuery(analytics, profileId);
+        //GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics, dimensions, "");
+        GaData data = executeDataQuery(analytics, profileId);
         writeToCSV(data);
         printGaData(data);
         printQueryInfo(data);
@@ -216,8 +216,8 @@ public class HelloAnalyticsApiSample {
    */
   private static GaData executeDataQuery(Analytics analytics, String profileId) throws IOException {
     return analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
-  "2009-09-15", // Start date.
-  "2009-09-15", // End date.
+  "2009-06-20", // Start date.
+  "2009-06-20", // End date.
   "ga:visitors") // Metrics.
   .setDimensions("ga:date, ga:visitcount")
   .setMaxResults(100)

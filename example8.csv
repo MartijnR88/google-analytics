@@ -1,0 +1,2 @@
+{"columnType":"DIMENSION";"dataType":"STRING";"name":"ga:date"},{"columnType":"METRIC";"dataType":"INTEGER";"name":"ga:visitors"},
+20090620,11,
