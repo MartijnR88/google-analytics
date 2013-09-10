@@ -1,0 +1,15 @@
+{
+  "columnType" : "DIMENSION",
+  "dataType" : "STRING",
+  "name" : "ga:date"
+},{
+  "columnType" : "DIMENSION",
+  "dataType" : "STRING",
+  "name" : "ga:visitorType"
+},{
+  "columnType" : "METRIC",
+  "dataType" : "INTEGER",
+  "name" : "ga:visitors"
+},
+20090915,New Visitor,14,
+20090915,Returning Visitor,1,

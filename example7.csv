@@ -1,0 +1,4 @@
+"{""columnType"":""DIMENSION"";""dataType"":""STRING"";""name"":""ga:date""}";"{""columnType"":""DIMENSION"";""dataType"":""STRING"";""name"":""ga:visitCount""}";"{""columnType"":""METRIC"";""dataType"":""INTEGER"";""name"":""ga:visitors""}"
+20090915;1;14
+20090915;2;1
+20090915;3;1

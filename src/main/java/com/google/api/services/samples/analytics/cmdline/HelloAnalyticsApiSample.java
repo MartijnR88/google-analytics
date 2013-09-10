@@ -36,6 +36,8 @@ import com.google.api.services.analytics.model.GaData.ColumnHeaders;
 import com.google.api.services.analytics.model.GaData.Query;
 import com.google.api.services.analytics.model.Profiles;
 import com.google.api.services.analytics.model.Webproperties;
+
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -79,7 +81,7 @@ public class HelloAnalyticsApiSample {
   /**Maximum of 10 metrics per request */
   private static final String metrics = "ga:visits, ga:visitors, ga:avgTimeOnPage, ga:pageviews, ga:timeOnPage, ga:uniquepageviews";
   /**Maximum of 7 dimensions per request */
-  private static final String dimensions = "ga:pagepath, ga:date";
+  private static final String dimensions = "ga:pagepath, ga:date, ga:visitlength";
 
   /**
    * Main demo. This first initializes an analytics service object. It then uses the Google
@@ -105,6 +107,13 @@ public class HelloAnalyticsApiSample {
         printQueryInfo(data);
         printPaginationInfo(data);
         printResponseInfo(data);
+        if (data.getNextLink() != null) 
+        {
+          GenericUrl url = new GenericUrl(data.getNextLink());
+          HttpResponse response = analytics.getRequestFactory().buildGetRequest(url).execute();
+          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
+          writeToCSV(data);
+        }
       }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
@@ -207,10 +216,10 @@ public class HelloAnalyticsApiSample {
    */
   private static GaData executeDataQuery(Analytics analytics, String profileId) throws IOException {
     return analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
-  "2009-01-01", // Start date.
-  "2013-12-31", // End date.
-  "ga:visits, ga:visitors, ga:avgTimeOnPage, ga:pageviews, ga:timeOnPage, ga:uniquepageviews") // Metrics.
-  .setDimensions("ga:pagepath, ga:date, ga:visitlength")
+  "2009-09-15", // Start date.
+  "2009-09-15", // End date.
+  "ga:visitors") // Metrics.
+  .setDimensions("ga:date, ga:visitcount")
   .setMaxResults(100)
   .execute();
   }
@@ -222,7 +231,7 @@ public class HelloAnalyticsApiSample {
         metrics) // Metrics.
         .setDimensions(dimensions)
         //.setSort(sort)
-        .setMaxResults(100)
+        .setMaxResults(10000)
         .execute();
     
 //    if (data.getNextLink() != null) {
@@ -237,15 +246,29 @@ public class HelloAnalyticsApiSample {
   }
   
   private static void writeToCSV(GaData results) throws IOException{
-    FileWriter writer = new FileWriter("test.csv");
+    //1. Open file
+    //2. if exists, append results
+    //3. otherwise, create file and write to file
+    boolean created = false;
+    File file = new File("test.csv");
+    
+    if (!file.exists()) {
+      file.createNewFile();
+      created = true;
+    }
+    
+    FileWriter writer = new FileWriter(file.getName(), true);
     if (results.getRows() == null || results.getRows().isEmpty()) {
       System.out.println("No results Found.");
     }
     else {
-      for (ColumnHeaders header : results.getColumnHeaders()) {
-        writer.append(header.toPrettyString() + ",");
+      if (created) {
+        for (ColumnHeaders header : results.getColumnHeaders()) {
+          writer.append(header.toString().replaceAll(",", ";") + ",");
+        }
+        writer.append('\n');
       }
-      writer.append('\n');
+      
       for (List<String> row : results.getRows()) {
         for (String column : row) {
           writer.append(column + ",");
@@ -257,14 +280,15 @@ public class HelloAnalyticsApiSample {
     writer.flush();
     writer.close();
   }
-  
+    
   /**
    * Prints the output from the Core Reporting API. The profile name is printed along with each
    * column name and all the data in the rows.
    *
    * @param results data returned from the Core Reporting API.
+   * @throws IOException 
    */
-  private static void printGaData(GaData results) {
+  private static void printGaData(GaData results) throws IOException {
     System.out.println(
         "printing results for profile: " + results.getProfileInfo().getProfileName());
 
