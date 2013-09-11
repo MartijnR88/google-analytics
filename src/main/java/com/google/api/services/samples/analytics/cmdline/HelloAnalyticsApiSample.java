@@ -22,6 +22,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -75,14 +76,26 @@ public class HelloAnalyticsApiSample {
   /** Global instance of the HTTP transport. */
   private static HttpTransport HTTP_TRANSPORT;
 
+  private static Integer MAX_RESULTS = 100;
+
   /** Global instance of the JSON factory. */
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
   
   /**Maximum of 10 metrics per request */
-  private static final String metrics = "ga:visits, ga:visitors, ga:avgTimeOnPage, ga:pageviews, ga:timeOnPage, ga:uniquepageviews";
+  private static final String metrics_table1 = "ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews,ga:bounces";
   /**Maximum of 7 dimensions per request */
-  private static final String dimensions = "ga:pagepath, ga:date, ga:visitlength";
+  private static final String dimensions_table1 = "ga:pagepath,ga:date,ga:visitlength";
 
+  /**Maximum of 10 metrics per request */
+  private static final String metrics_table2 = "ga:visits, ga:visitors, ga:pageviews, ga:uniquepageviews, ga:entrances, ga:exits,ga:bounces";
+  /**Maximum of 7 dimensions per request */
+  private static final String dimensions_table2 = "ga:date, ga:landingpagepath, ga:secondpagepath, ga:exitpagepath";
+  
+  /**Maximum of 10 metrics per request */
+  private static final String metrics_table3 = "ga:visits, ga:visitors, ga:pageviews, ga:bounces";
+  /**Maximum of 7 dimensions per request */
+  private static final String dimensions_table3 = "ga:pagepath, ga:date, ga:previouspagepath, ga:nextpagepath";
+  
   /**
    * Main demo. This first initializes an analytics service object. It then uses the Google
    * Analytics Management API to get the first profile ID for the authorized user. It then uses the
@@ -100,17 +113,20 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        //GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics, dimensions, "");
-        GaData data = executeDataQuery(analytics, profileId);
+//        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics_table1, dimensions_table1, "");
+        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics_table2, dimensions_table2, "");
+//        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics_table3, dimensions_table3, "");
+        //GaData data = executeDataQuery(analytics, profileId);
         writeToCSV(data);
         printGaData(data);
         printQueryInfo(data);
         printPaginationInfo(data);
         printResponseInfo(data);
+        HttpRequestFactory factory = analytics.getRequestFactory();
         if (data.getNextLink() != null) 
         {
           GenericUrl url = new GenericUrl(data.getNextLink());
-          HttpResponse response = analytics.getRequestFactory().buildGetRequest(url).execute();
+          HttpResponse response = factory.buildGetRequest(url).execute();
           data = data.getFactory().fromString(response.parseAsString(), GaData.class);
           writeToCSV(data);
         }
@@ -231,7 +247,7 @@ public class HelloAnalyticsApiSample {
         metrics) // Metrics.
         .setDimensions(dimensions)
         //.setSort(sort)
-        .setMaxResults(10000)
+        .setMaxResults(MAX_RESULTS)
         .execute();
     
 //    if (data.getNextLink() != null) {
