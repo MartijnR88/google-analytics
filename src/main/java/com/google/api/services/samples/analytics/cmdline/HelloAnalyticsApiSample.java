@@ -38,12 +38,27 @@ import com.google.api.services.analytics.model.GaData.Query;
 import com.google.api.services.analytics.model.Profiles;
 import com.google.api.services.analytics.model.Webproperties;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 
 /**
@@ -53,7 +68,7 @@ import java.util.List;
  * web property, and finally the first profile and retrieve the first profile id. This ID is then
  * used with the Core Reporting API to retrieve the top 25 organic search terms.
  *
- * @author api.nickm@gmail.com
+ * @author
  */
 public class HelloAnalyticsApiSample {
 
@@ -76,25 +91,29 @@ public class HelloAnalyticsApiSample {
   /** Global instance of the HTTP transport. */
   private static HttpTransport HTTP_TRANSPORT;
 
-  private static Integer MAX_RESULTS = 100;
-
   /** Global instance of the JSON factory. */
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
-  
+    
   /**Maximum of 10 metrics per request */
   private static final String metrics_table1 = "ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews,ga:bounces";
   /**Maximum of 7 dimensions per request */
   private static final String dimensions_table1 = "ga:pagepath,ga:date,ga:visitlength";
 
   /**Maximum of 10 metrics per request */
-  private static final String metrics_table2 = "ga:visits, ga:visitors, ga:pageviews, ga:uniquepageviews, ga:entrances, ga:exits,ga:bounces";
+  private static final String metrics_table2 = "ga:visits, ga:visitors, ga:pageviews, ga:uniquepageviews";
   /**Maximum of 7 dimensions per request */
   private static final String dimensions_table2 = "ga:date, ga:landingpagepath, ga:secondpagepath, ga:exitpagepath";
   
   /**Maximum of 10 metrics per request */
   private static final String metrics_table3 = "ga:visits, ga:visitors, ga:pageviews, ga:bounces";
   /**Maximum of 7 dimensions per request */
-  private static final String dimensions_table3 = "ga:pagepath, ga:date, ga:previouspagepath, ga:nextpagepath";
+  private static final String dimensions_table3 = "ga:hostname, ga:pagepath, ga:date, ga:visitlength, ga:previouspagepath, ga:nextpagepath";
+  
+  private static Integer MAX_RESULTS = 10000;
+  private static String BEGIN_DATE = "2009-01-01";
+  private static String END_DATE = "2013-12-31";
+
+  private static String DATASET = "dataset.xml";
   
   /**
    * Main demo. This first initializes an analytics service object. It then uses the Google
@@ -113,21 +132,22 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-//        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics_table1, dimensions_table1, "");
-        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics_table2, dimensions_table2, "");
-//        GaData data = executeDataQuery(analytics, profileId, "2009-01-01", "2013-12-31", metrics_table3, dimensions_table3, "");
-        //GaData data = executeDataQuery(analytics, profileId);
+        //GaData data1 = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table1, dimensions_table1);
+        //GaData data2 = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table2, dimensions_table2);
+        GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table3, dimensions_table3);
+        filterMovies(data, 2, 1);
         writeToCSV(data);
         printGaData(data);
         printQueryInfo(data);
         printPaginationInfo(data);
         printResponseInfo(data);
         HttpRequestFactory factory = analytics.getRequestFactory();
-        if (data.getNextLink() != null) 
+        while (data.getNextLink() != null) 
         {
           GenericUrl url = new GenericUrl(data.getNextLink());
           HttpResponse response = factory.buildGetRequest(url).execute();
           data = data.getFactory().fromString(response.parseAsString(), GaData.class);
+          filterMovies(data, 2, 1);
           writeToCSV(data);
         }
       }
@@ -138,6 +158,98 @@ public class HelloAnalyticsApiSample {
       t.printStackTrace();
     }
   }
+
+  /**
+   * @param data
+   * @param insertIndex the index where to insert the column about movies
+   * @return 
+   * @throws ParserConfigurationException 
+   * @throws IOException 
+   * @throws SAXException 
+   * @throws XPathExpressionException 
+   */
+  private static GaData filterMovies(GaData data, int insertIndex, int pagePathIndex) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    //Get list of movies
+    DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();   
+    domFactory.setIgnoringComments(true);
+    DocumentBuilder builder = domFactory.newDocumentBuilder();
+    Document doc = builder.parse(new File(DATASET));
+    XPath xPath = XPathFactory.newInstance().newXPath();
+    ArrayList<String> dataset = new ArrayList<String>();    
+    NodeList nodeList = (NodeList) xPath.compile("OAI-PMH/ListRecords/record/metadata//*[name()='oai_oi:oi']//*[name()='oi:attributionURL']").evaluate(doc,
+            XPathConstants.NODESET);
+    for (int i = 0; i < nodeList.getLength(); i++) {
+        if (nodeList.item(i).getFirstChild() != null){
+            dataset.add(nodeList.item(i).getFirstChild().getNodeValue());
+        }
+        else {
+            dataset.add("null");
+        }
+    }
+    
+    //Rewrite urls to match it with pagepaths
+    for (int i = 0; i < dataset.size(); i++) {
+      String url = dataset.get(i);
+      dataset.set(i, rewriteUrl(url));
+    }
+    
+    //Add columnheader IsMovie
+    List<ColumnHeaders> columnHeaders = data.getColumnHeaders();
+    ColumnHeaders header = new ColumnHeaders().setName("IsMovie");
+    columnHeaders.add(insertIndex, header);
+    data.setColumnHeaders(columnHeaders);
+    
+    //Add results to row
+    List<List<String>> rows = data.getRows();
+    for (int i = 0; i < rows.size(); i++) {
+      List<String> row = rows.get(i);
+      String movieURL = rewriteMovieUrl(row.get(pagePathIndex));
+      
+      if (dataset.contains(movieURL)) {
+        row.add(insertIndex, "Yes");
+      }
+      else {
+        row.add(insertIndex, "No");
+      }      
+    }
+    
+    return data;
+  }
+
+  /**
+   * @param url
+   * @return
+   */
+  private static String rewriteMovieUrl(String url) {
+    String result = "";    
+    String[] results = url.split("/");
+    
+    if (results.length > 1) {
+      if (results.length > 2) {
+        result = results[1] + "/" + results[2];
+      }
+      
+      else {
+        result = results[1];
+      }
+    }
+    else {
+      result = "/";
+    }
+       
+    return result;
+  }
+
+  /**
+   * @param url
+   * @return
+   */
+  private static String rewriteUrl(String url) {
+    String result = "";    
+    String[] results = url.split("/");
+    result = results[3] + "/" + results[4];    
+    return result;
+  }  
 
   /** Authorizes the installed application to access user's protected data. */
   private static Credential authorize() throws Exception {
@@ -222,49 +334,30 @@ public class HelloAnalyticsApiSample {
   }
 
   /**
-   * Returns the top 25 organic search keywords and traffic source by visits. The Core Reporting API
-   * is used to retrieve this data.
+   * The Core Reporting API is used to retrieve this data.
    *
    * @param analytics the analytics service object used to access the API.
    * @param profileId the profile ID from which to retrieve data.
+   * @param startDate the start date
+   * @param endDate the end date
+   * @param metrics the metrics for which to retrieve data
+   * @param dimensions the dimensions for which to retrieve data
    * @return the response from the API.
    * @throws IOException tf an API error occured.
    */
-  private static GaData executeDataQuery(Analytics analytics, String profileId) throws IOException {
-    return analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
-  "2009-06-20", // Start date.
-  "2009-06-20", // End date.
-  "ga:visitors") // Metrics.
-  .setDimensions("ga:date, ga:visitcount")
-  .setMaxResults(100)
-  .execute();
-  }
-  
-  private static GaData executeDataQuery(Analytics analytics, String profileId, String startDate, String endDate, String metrics, String dimensions, String sort) throws IOException {
+  private static GaData executeDataQuery(Analytics analytics, String profileId, String startDate, String endDate, String metrics, String dimensions) throws IOException {
     GaData data = analytics.data().ga().get("ga:" + profileId, // Table Id. ga: + profile id.
         startDate, // Start date.
         endDate, // End date.
         metrics) // Metrics.
         .setDimensions(dimensions)
-        //.setSort(sort)
         .setMaxResults(MAX_RESULTS)
         .execute();
-    
-//    if (data.getNextLink() != null) {
-//      GenericUrl url = new GenericUrl(data.getNextLink());
-//      HttpResponse response = analytics.getRequestFactory().buildGetRequest(url).execute();
-//      data = data.getFactory().fromString(response.parseAsString(), GaData.class); 
-//      System.out.println("Next 10");
-//        System.out.println(response.parseAsString());
-//    }
     
     return data;
   }
   
   private static void writeToCSV(GaData results) throws IOException{
-    //1. Open file
-    //2. if exists, append results
-    //3. otherwise, create file and write to file
     boolean created = false;
     File file = new File("test.csv");
     
