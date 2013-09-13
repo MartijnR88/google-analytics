@@ -132,9 +132,9 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        //GaData data1 = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table1, dimensions_table1);
-        //GaData data2 = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table2, dimensions_table2);
-        GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table3, dimensions_table3);
+        //GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table1, dimensions_table1);
+        GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table2, dimensions_table2);
+        //GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table3, dimensions_table3);
         filterMovies(data, 2, 1);
         writeToCSV(data);
         printGaData(data);
