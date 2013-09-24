@@ -39,6 +39,8 @@ import com.google.api.services.analytics.model.Profiles;
 import com.google.api.services.analytics.model.Webproperties;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -46,8 +48,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -95,25 +95,42 @@ public class HelloAnalyticsApiSample {
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
     
   /**Maximum of 10 metrics per request */
-  private static final String metrics_table1 = "ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews,ga:bounces";
+  private static final String METRICS_TABLE1 = "ga:visits,ga:visitors,ga:timeOnPage,ga:pageviews,ga:bounces";
   /**Maximum of 7 dimensions per request */
-  private static final String dimensions_table1 = "ga:pagepath,ga:date,ga:visitlength";
-
-  /**Maximum of 10 metrics per request */
-  private static final String metrics_table2 = "ga:visits, ga:visitors, ga:pageviews, ga:uniquepageviews";
-  /**Maximum of 7 dimensions per request */
-  private static final String dimensions_table2 = "ga:date, ga:landingpagepath, ga:secondpagepath, ga:exitpagepath";
+  private static final String DIMENSIONS_TABLE1 = "ga:pagepath,ga:date,ga:visitlength,ga:city";
+  private static final int ISMOVIE_INDEX_TABLE1 = 1;
   
   /**Maximum of 10 metrics per request */
-  private static final String metrics_table3 = "ga:visits, ga:visitors, ga:pageviews, ga:bounces";
+  private static final String METRICS_TABLE2 = "ga:visits, ga:visitors, ga:pageviews, ga:uniquepageviews";
   /**Maximum of 7 dimensions per request */
-  private static final String dimensions_table3 = "ga:hostname, ga:pagepath, ga:date, ga:visitlength, ga:previouspagepath, ga:nextpagepath";
+  private static final String DIMENSIONS_TABLE2 = "ga:date, ga:landingpagepath, ga:secondpagepath, ga:exitpagepath,ga:city";
+  private static final int ISMOVIE_INDEX1_TABLE2 = 2;
+  private static final int ISMOVIE_INDEX2_TABLE2 = 4;
+  private static final int ISMOVIE_INDEX3_TABLE2 = 6;
+  private static final int LANDINGPAGEPATHINDEX = 1;
+  private static final int SECONDPAGEPATHINDEX = 3;
+  private static final int HASRELATIONSHIP_INDEX_TABLE2 = 5;
   
-  private static Integer MAX_RESULTS = 10000;
-  private static String BEGIN_DATE = "2009-01-01";
-  private static String END_DATE = "2013-12-31";
+  /**Maximum of 10 metrics per request */
+  private static final String METRICS_TABLE3 = "ga:visits, ga:visitors, ga:pageviews, ga:bounces";
+  /**Maximum of 7 dimensions per request */
+  private static final String DIMENSIONS_TABLE3 = "ga:pagepath, ga:date, ga:visitlength, ga:previouspagepath, ga:nextpagepath,ga:city";
+  private static final int ISMOVIE_INDEX1_TABLE3 = 1;
+  private static final int ISMOVIE_INDEX2_TABLE3 = 5;
+  private static final int ISMOVIE_INDEX3_TABLE3 = 7;
+  private static final int PAGEPATHINDEX = 0;
+  private static final int PREVIOUSPAGEPATHINDEX = 4;
+  private static final int NEXTPAGEPATHINDEX = 8;
+  private static final int HASRELATIONSHIP_INDEX1_TABLE3 = 6;
+  private static final int HASRELATIONSHIP_INDEX2_TABLE3 = 10;
+  
+  private static final int MAX_RESULTS = 10000;
+  private static final String BEGIN_DATE = "2009-01-01";
+  private static final String END_DATE = "2013-12-31";
 
-  private static String DATASET = "dataset.xml";
+  private static final String DATASET = "dataset.xml";
+  /** Got it via: http://www.openbeelden.nl/feeds/tags-html.jspx */
+  private static final String TAGS = "tags.xml";
   
   /**
    * Main demo. This first initializes an analytics service object. It then uses the Google
@@ -132,31 +149,115 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        //GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table1, dimensions_table1);
-        GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table2, dimensions_table2);
-        //GaData data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, metrics_table3, dimensions_table3);
-        filterMovies(data, 2, 1);
+        int table = 3;
+        GaData data;
+        
+        if (table == 1) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
+          filterMovie(data, ISMOVIE_INDEX_TABLE1);  
+        }
+        else if (table == 2) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);  
+        }
+        else {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
+          filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+          filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+          filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+          filterRelationship(data, HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX);
+          filterRelationship(data, HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX);  
+        }  
+
         writeToCSV(data);
-        printGaData(data);
-        printQueryInfo(data);
-        printPaginationInfo(data);
-        printResponseInfo(data);
+//        printGaData(data);
+//        printQueryInfo(data);
+//        printPaginationInfo(data);
+//        printResponseInfo(data);
         HttpRequestFactory factory = analytics.getRequestFactory();
         while (data.getNextLink() != null) 
         {
           GenericUrl url = new GenericUrl(data.getNextLink());
           HttpResponse response = factory.buildGetRequest(url).execute();
           data = data.getFactory().fromString(response.parseAsString(), GaData.class);
-          filterMovies(data, 2, 1);
+          if (table == 1) {
+            filterMovie(data, ISMOVIE_INDEX_TABLE1);
+          }
+          else if (table == 2) {
+          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);
+          }
+          else {
+            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+            filterRelationship(data, HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX);
+            filterRelationship(data, HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX);
+          }
+
           writeToCSV(data);
         }
-      }
+        }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
           + e.getDetails().getMessage());
     } catch (Throwable t) {
       t.printStackTrace();
     }
+  }
+
+  /**
+   * @param data
+   * @throws IOException 
+   * @throws SAXException 
+   * @throws ParserConfigurationException 
+   * @throws XPathExpressionException 
+   */
+  private static GaData filterRelationship(GaData data, int insertIndex, int videoIndex1, int videoIndex2) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+    //Add columnheader hasRelationship and relationship
+    List<ColumnHeaders> columnHeaders = data.getColumnHeaders();
+    ColumnHeaders header = new ColumnHeaders().setName("hasRelationship");
+    columnHeaders.add(insertIndex, header);
+    ColumnHeaders header2 = new ColumnHeaders().setName("relationship");
+    columnHeaders.add(insertIndex+1, header2);
+    data.setColumnHeaders(columnHeaders);
+
+    //Add results to row
+    List<List<String>> rows = data.getRows();
+    
+    for (int i = 0; i < rows.size(); i++) {
+      List<String> row = rows.get(i);
+      
+      if (row.get(videoIndex1+1).equals("Yes") && row.get(videoIndex2+1).equals("Yes")) {
+      ArrayList<String> relationship = new ArrayList<String>();
+      relationship = hasRelationship(rewriteTagUrl(row.get(videoIndex1)), rewriteTagUrl(row.get(videoIndex2)));
+      String relationships = "";
+      
+      if (relationship.size() > 0) {
+        row.add(insertIndex, "True");
+        for (int j = 0; j < relationship.size(); j++){
+          relationships = relationships + relationship.get(j) + "; ";
+        }
+        row.add(insertIndex+1, relationships);
+      }
+      else {
+        row.add(insertIndex, "False");
+        row.add(insertIndex+1, "null");
+      }      
+      }
+      
+      else {
+        row.add(insertIndex, "False");
+        row.add(insertIndex+1, "null");
+      }
+    }
+    
+    return data;
   }
 
   /**
@@ -168,16 +269,11 @@ public class HelloAnalyticsApiSample {
    * @throws SAXException 
    * @throws XPathExpressionException 
    */
-  private static GaData filterMovies(GaData data, int insertIndex, int pagePathIndex) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+  private static GaData filterMovie(GaData data, int insertIndex) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
     //Get list of movies
-    DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();   
-    domFactory.setIgnoringComments(true);
-    DocumentBuilder builder = domFactory.newDocumentBuilder();
-    Document doc = builder.parse(new File(DATASET));
-    XPath xPath = XPathFactory.newInstance().newXPath();
+    NodeList nodeList = getNodes(DATASET, "OAI-PMH/ListRecords/record/metadata//*[name()='oai_oi:oi']//*[name()='oi:attributionURL']");   
     ArrayList<String> dataset = new ArrayList<String>();    
-    NodeList nodeList = (NodeList) xPath.compile("OAI-PMH/ListRecords/record/metadata//*[name()='oai_oi:oi']//*[name()='oi:attributionURL']").evaluate(doc,
-            XPathConstants.NODESET);
+
     for (int i = 0; i < nodeList.getLength(); i++) {
         if (nodeList.item(i).getFirstChild() != null){
             dataset.add(nodeList.item(i).getFirstChild().getNodeValue());
@@ -190,7 +286,7 @@ public class HelloAnalyticsApiSample {
     //Rewrite urls to match it with pagepaths
     for (int i = 0; i < dataset.size(); i++) {
       String url = dataset.get(i);
-      dataset.set(i, rewriteUrl(url));
+      dataset.set(i, rewriteOpenImagesUrl(url));
     }
     
     //Add columnheader IsMovie
@@ -203,7 +299,7 @@ public class HelloAnalyticsApiSample {
     List<List<String>> rows = data.getRows();
     for (int i = 0; i < rows.size(); i++) {
       List<String> row = rows.get(i);
-      String movieURL = rewriteMovieUrl(row.get(pagePathIndex));
+      String movieURL = rewriteGAUrl(row.get(insertIndex-1));
       
       if (dataset.contains(movieURL)) {
         row.add(insertIndex, "Yes");
@@ -220,13 +316,20 @@ public class HelloAnalyticsApiSample {
    * @param url
    * @return
    */
-  private static String rewriteMovieUrl(String url) {
+  private static String rewriteGAUrl(String url) {
     String result = "";    
     String[] results = url.split("/");
     
     if (results.length > 1) {
       if (results.length > 2) {
-        result = results[1] + "/" + results[2];
+        String[] tempresult = results[2].split("\\.");
+        //if (tempresult.length > 1) {
+        //  System.out.println("Result: " + tempresult[0]);
+          result = results[1] + "/" + tempresult[0];
+        //}
+        //else {
+        //  result = results[1] + "/" + results[2];
+        //}
       }
       
       else {
@@ -244,12 +347,58 @@ public class HelloAnalyticsApiSample {
    * @param url
    * @return
    */
-  private static String rewriteUrl(String url) {
+  private static String rewriteOpenImagesUrl(String url) {
     String result = "";    
     String[] results = url.split("/");
     result = results[3] + "/" + results[4];    
     return result;
-  }  
+  }
+  
+  private static String rewriteTagUrl(String url) {
+    String[] results = url.split("/");  
+    return results[2];
+  }
+  
+  private static NodeList getNodes(String dataset, String expression) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();   
+    domFactory.setIgnoringComments(true);
+    DocumentBuilder builder = domFactory.newDocumentBuilder();
+    Document doc = builder.parse(new File(dataset));
+    XPath xPath = XPathFactory.newInstance().newXPath();
+    NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(doc,XPathConstants.NODESET);
+    return nodeList;
+  }
+  
+  private static ArrayList<String> hasRelationship(String attributionURLvideo1, String attributionURLvideo2) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    ArrayList<String> results = new ArrayList<String>();
+    NodeList nodes = getNodes(TAGS, "tags/tag");
+
+    for (int i = 0; i < nodes.getLength(); i++) {
+      Node tag = nodes.item(i);
+      
+      if (tag.getNodeType() == Node.ELEMENT_NODE) {
+        Element firstTag = (Element)tag;
+        NodeList videos = firstTag.getElementsByTagName("video");
+        ArrayList<String> videoNumbers = new ArrayList<String>();
+        
+        for (int j = 0; j < videos.getLength(); j++){
+          Node video = videos.item(j);
+          
+          if (video.getNodeType() == Node.ELEMENT_NODE) {
+            Element firstVideo = (Element)video;
+            String videoNumber = firstVideo.getAttribute("number");
+            videoNumbers.add(videoNumber);
+          }
+        }
+        
+        if (videoNumbers.contains(attributionURLvideo1) && videoNumbers.contains(attributionURLvideo2) && !attributionURLvideo1.equals(attributionURLvideo2)) {
+          results.add(firstTag.getElementsByTagName("name").item(0).getChildNodes().item(0).getNodeValue());
+        }
+      }
+    }
+
+    return results;
+  }
 
   /** Authorizes the installed application to access user's protected data. */
   private static Credential authorize() throws Exception {
@@ -380,7 +529,7 @@ public class HelloAnalyticsApiSample {
       
       for (List<String> row : results.getRows()) {
         for (String column : row) {
-          writer.append(column + ",");
+          writer.append(column.replaceAll(",", ";") + ",");
         }
         writer.append('\n');
       }      
