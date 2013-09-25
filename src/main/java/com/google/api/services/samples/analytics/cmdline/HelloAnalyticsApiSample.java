@@ -117,7 +117,7 @@ public class HelloAnalyticsApiSample {
   /**Maximum of 10 metrics per request */
   private static final String METRICS_TABLE3 = "ga:visits, ga:visitors, ga:pageviews, ga:bounces";
   /**Maximum of 7 dimensions per request */
-  private static final String DIMENSIONS_TABLE3 = "ga:pagepath, ga:date, ga:visitlength, ga:previouspagepath, ga:nextpagepath,ga:city";
+  private static final String DIMENSIONS_TABLE3 = "ga:pagepath, ga:date, ga:visitLength, ga:previousPagePath, ga:nextpagepath, ga:city";
   private static final int ISMOVIE_INDEX1_TABLE3 = 1;
   private static final int ISMOVIE_INDEX2_TABLE3 = 5;
   private static final int ISMOVIE_INDEX3_TABLE3 = 7;
@@ -152,69 +152,69 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-        int table = 3;
-        String table3 = "test.csv";
-        String nameWriteFile = "test1.csv";
-        String nameWriteFile2 = "test2.csv";
-        writeToCSV(filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX), nameWriteFile);
-        writeToCSV(filterRelationship(loadCSV(nameWriteFile), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX), nameWriteFile2);
+
+// Compare if pagepath equals nextpagepath
+//        List<List<String>> list = loadCSV("test.csv");
+//        ArrayList<Integer> indices = compare(list);
+//        System.out.println("Total number of different pagepath/nextpagepath: " + indices.size());
+//        System.out.println("Indices of the different ones: " + indices.toString());
         
-//        GaData data;
-//        
-//        if (table == 1) {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
-//          filterMovie(data, ISMOVIE_INDEX_TABLE1);  
-//        }
-//        else if (table == 2) {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
-//          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);  
-//        }
-//        else {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
-//          filterMovie(data, ISMOVIE_INDEX1_TABLE3);
-//          filterMovie(data, ISMOVIE_INDEX2_TABLE3);
-//          filterMovie(data, ISMOVIE_INDEX3_TABLE3);
-//          filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX);
-//          filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX);
-//          //filterRelationship(data, HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX);
-//          //filterRelationship(data, HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX);  
-//        }  
-//
-//        writeToCSV(data, nameWriteFile);
+        int table = 3;
+        String writeToFile = "test.csv";
+
+// Filter relationships        
+//        String nameWriteFile2 = "test2.csv";
+//        writeToCSV(filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX), nameWriteFile);
+//        writeToCSV(filterRelationship(loadCSV(nameWriteFile), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX), nameWriteFile2);
+        
+        GaData data;
+        
+        if (table == 1) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
+          filterMovie(data, ISMOVIE_INDEX_TABLE1);  
+        }
+        else if (table == 2) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);  
+        }
+        else {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
+          filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+          filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+          filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+        }  
+
+        writeToCSV(data, writeToFile);
 ////        printGaData(data);
 ////        printQueryInfo(data);
 ////        printPaginationInfo(data);
 ////        printResponseInfo(data);
-//        HttpRequestFactory factory = analytics.getRequestFactory();
-//        while (data.getNextLink() != null) 
-//        {
-//          GenericUrl url = new GenericUrl(data.getNextLink());
-//          HttpResponse response = factory.buildGetRequest(url).execute();
-//          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
-//          if (table == 1) {
-//            filterMovie(data, ISMOVIE_INDEX_TABLE1);
-//          }
-//          else if (table == 2) {
-//          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
-//          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);
-//          }
-//          else {
-//            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
-//            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
-//            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
-//            filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX);
-//            filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX);
-////            filterRelationship(data, HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX);
-////            filterRelationship(data, HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX);
-//          }
-//
-//          writeToCSV(data, nameWriteFile);
-//        }
+        HttpRequestFactory factory = analytics.getRequestFactory();
+        while (data.getNextLink() != null) 
+        {
+          GenericUrl url = new GenericUrl(data.getNextLink());
+          HttpResponse response = factory.buildGetRequest(url).execute();
+          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
+          if (table == 1) {
+            filterMovie(data, ISMOVIE_INDEX_TABLE1);
+          }
+          else if (table == 2) {
+          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);
+          }
+          else {
+            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+          }
+
+          writeToCSV(data, writeToFile);
+        }
         }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
@@ -224,15 +224,36 @@ public class HelloAnalyticsApiSample {
     }
   }
   
+  /**
+   * @param list
+   * @throws IOException 
+   * @throws SAXException 
+   * @throws ParserConfigurationException 
+   * @throws XPathExpressionException 
+   */
+  private static ArrayList<Integer> compare(List<List<String>> list) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {   
+    ArrayList<Integer> indices = new ArrayList<Integer>();
+    for (int i = 1; i < list.size(); i++) {
+      System.out.println("Comparing line: " + i);
+      List<String> row = list.get(i);
+      System.out.println(row.get(NEXTPAGEPATHINDEX));
+      if (!(row.get(PAGEPATHINDEX).equals(row.get(NEXTPAGEPATHINDEX)))) {
+        indices.add(i);
+      }
+    }
+    
+    return indices;
+  }
+
   @SuppressWarnings("resource")
   private static List<List<String>> loadCSV(String filename) throws IOException {
     List<List<String>> result = new ArrayList<List<String>>();
     String line = "";
     BufferedReader br = null;
-    List<String> row = new ArrayList<String>();
     
     br = new BufferedReader(new FileReader(filename));
     while ((line = br.readLine()) != null) {
+      List<String> row = new ArrayList<String>();
       String[] temprow = line.split(",");
       for (String s : temprow){
         row.add(s);
@@ -240,22 +261,28 @@ public class HelloAnalyticsApiSample {
       result.add(row);
     }
     
+    System.out.println("CSV loaded");
+    
     return result;
   }
   
   private static List<List<String>> filterRelationship(List<List<String>> data, int insertIndex, int videoIndex1, int videoIndex2) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
     List<String> columnHeaders = data.get(0);
+    System.out.println("Columnheaders: " + columnHeaders.get(0));
     String header = "hasRelationship";
     String header2 = "relationship";
     columnHeaders.add(insertIndex, header);
     columnHeaders.add(insertIndex+1, header2);
     data.set(0, columnHeaders);
     
+    System.out.println("Updated columnheaders");
+    
     List<List<String>> rows = data;
     
     //Begins with 1, because the 0th row are the columnheaders
     for (int i = 1; i < rows.size(); i++) {
       List<String> row = rows.get(i);
+      System.out.println("Updating row: " + i + " of " + rows.size() + " rows");
       
       if (row.get(videoIndex1+1).equals("Yes") && row.get(videoIndex2+1).equals("Yes")) {
       ArrayList<String> relationship = new ArrayList<String>();
@@ -279,7 +306,10 @@ public class HelloAnalyticsApiSample {
         row.add(insertIndex, "False");
         row.add(insertIndex+1, "null");
       }
-    }    
+      System.out.println("Row: " + row.toString() + "\n");
+    }
+    
+    System.out.println("Rows updated");
     
     return data;
   }
@@ -606,8 +636,10 @@ public class HelloAnalyticsApiSample {
         List<String> row = rows.get(i);
         for (String column : row) {
           writer.append(column.replaceAll(",", ";") + ",");
+          System.out.println(column.replaceAll(",", ";") + "," + "/n");
         }
         writer.append('\n');
+        System.out.println("Appended row: " + i + "of " + rows.size() + " rows");
       }      
     }
 
