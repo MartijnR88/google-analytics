@@ -153,68 +153,70 @@ public class HelloAnalyticsApiSample {
         System.err.println("No profiles found.");
       } else {
 
+        writeToCSV(filterTags(loadCSV("table1.csv"), 9), "test.csv");
+        
 // Compare if pagepath equals nextpagepath
 //        List<List<String>> list = loadCSV("test.csv");
 //        ArrayList<Integer> indices = compare(list);
 //        System.out.println("Total number of different pagepath/nextpagepath: " + indices.size());
 //        System.out.println("Indices of the different ones: " + indices.toString());
-        
-        int table = 3;
-        String writeToFile = "test.csv";
-
-// Filter relationships        
-//        String nameWriteFile2 = "test2.csv";
-//        writeToCSV(filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX), nameWriteFile);
-//        writeToCSV(filterRelationship(loadCSV(nameWriteFile), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX), nameWriteFile2);
-        
-        GaData data;
-        
-        if (table == 1) {
-          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
-          filterMovie(data, ISMOVIE_INDEX_TABLE1);  
-        }
-        else if (table == 2) {
-          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
-          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
-          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
-          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
-          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);  
-        }
-        else {
-          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
-          filterMovie(data, ISMOVIE_INDEX1_TABLE3);
-          filterMovie(data, ISMOVIE_INDEX2_TABLE3);
-          filterMovie(data, ISMOVIE_INDEX3_TABLE3);
-        }  
-
-        writeToCSV(data, writeToFile);
-////        printGaData(data);
-////        printQueryInfo(data);
-////        printPaginationInfo(data);
-////        printResponseInfo(data);
-        HttpRequestFactory factory = analytics.getRequestFactory();
-        while (data.getNextLink() != null) 
-        {
-          GenericUrl url = new GenericUrl(data.getNextLink());
-          HttpResponse response = factory.buildGetRequest(url).execute();
-          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
-          if (table == 1) {
-            filterMovie(data, ISMOVIE_INDEX_TABLE1);
-          }
-          else if (table == 2) {
-          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
-          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
-          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
-          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);
-          }
-          else {
-            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
-            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
-            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
-          }
-
-          writeToCSV(data, writeToFile);
-        }
+//        
+//        int table = 3;
+//        String writeToFile = "test.csv";
+//
+//// Filter relationships        
+////        String nameWriteFile2 = "test2.csv";
+////        writeToCSV(filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX), nameWriteFile);
+////        writeToCSV(filterRelationship(loadCSV(nameWriteFile), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX), nameWriteFile2);
+//        
+//        GaData data;
+//        
+//        if (table == 1) {
+//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
+//          filterMovie(data, ISMOVIE_INDEX_TABLE1);  
+//        }
+//        else if (table == 2) {
+//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
+//          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+//          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+//          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+//          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);  
+//        }
+//        else {
+//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
+//          filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+//          filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+//          filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+//        }  
+//
+//        writeToCSV(data, writeToFile);
+//////        printGaData(data);
+//////        printQueryInfo(data);
+//////        printPaginationInfo(data);
+//////        printResponseInfo(data);
+//        HttpRequestFactory factory = analytics.getRequestFactory();
+//        while (data.getNextLink() != null) 
+//        {
+//          GenericUrl url = new GenericUrl(data.getNextLink());
+//          HttpResponse response = factory.buildGetRequest(url).execute();
+//          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
+//          if (table == 1) {
+//            filterMovie(data, ISMOVIE_INDEX_TABLE1);
+//          }
+//          else if (table == 2) {
+//          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+//          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+//          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+//          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);
+//          }
+//          else {
+//            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+//            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+//            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+//          }
+//
+//          writeToCSV(data, writeToFile);
+//        }
         }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
@@ -310,6 +312,59 @@ public class HelloAnalyticsApiSample {
     }
     
     System.out.println("Rows updated");
+    
+    return data;
+  }
+  
+  private static List<List<String>> filterTags(List<List<String>> data, int insertIndex) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+    List<String> columnHeaders = data.get(0);
+    String header = "Tags";
+    columnHeaders.add(insertIndex, header);
+    data.set(0, columnHeaders);
+    
+    ArrayList<String> results = new ArrayList<String>();
+    NodeList nodes = getNodes(TAGS, "tags/tag");
+
+    for (int j = 1; j < data.size(); j++) {
+      List<String> row = data.get(j);
+      String video = row.get(0);
+      
+      if (row.get(1).equals("Yes")) {
+      
+      for (int i = 0; i < nodes.getLength(); i++) {
+        Node tag = nodes.item(i);
+        
+        if (tag.getNodeType() == Node.ELEMENT_NODE) {
+          Element firstTag = (Element)tag;
+          NodeList videos = firstTag.getElementsByTagName("video");
+          ArrayList<String> videoNumbers = new ArrayList<String>();
+          
+          for (int k = 0; k < videos.getLength(); k++){
+            Node video1 = videos.item(k);
+            
+            if (video1.getNodeType() == Node.ELEMENT_NODE) {
+              Element firstVideo = (Element)video1;
+              String videoNumber = firstVideo.getAttribute("number");
+              videoNumbers.add(videoNumber);
+            }
+          }
+          
+          if (videoNumbers.contains(rewriteTagUrl(video)))
+              results.add(firstTag.getElementsByTagName("name").item(0).getChildNodes().item(0).getNodeValue());
+        }
+      }
+      
+      String tagcolumn = "";
+      for (String tag : results) {
+        tagcolumn = tagcolumn + tag + "; ";        
+      }
+        row.add(tagcolumn);
+      }
+      
+      else {
+        row.add("-");
+      }      
+    }
     
     return data;
   }
