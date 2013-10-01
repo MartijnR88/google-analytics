@@ -153,7 +153,9 @@ public class HelloAnalyticsApiSample {
         System.err.println("No profiles found.");
       } else {
 
-        writeToCSV(filterTags(loadCSV("table1.csv"), 9), "test.csv");
+        filterMovies(loadCSV("table1.csv"));
+
+        //writeToCSV(filterTags(loadCSV("table1.csv"), 9), "test.csv");
         
 // Compare if pagepath equals nextpagepath
 //        List<List<String>> list = loadCSV("test.csv");
@@ -266,6 +268,30 @@ public class HelloAnalyticsApiSample {
     System.out.println("CSV loaded");
     
     return result;
+  }
+  
+  private static void filterMovies(List<List<String>> data) throws IOException {
+    List<String> columnHeaders = data.get(0);
+    System.out.println("Columnheaders: " + columnHeaders.get(0));
+    String header = "movieId";
+    columnHeaders.add(1, header);
+    data.set(0, columnHeaders);
+    
+    for (int i = 1; i < data.size(); i++) {
+      List<String> row = data.get(i);
+      if (row.get(1).equals("Yes")) {
+        String video = row.get(0);
+        String[] parts = video.split("/");
+        parts = parts[2].split("\\.");
+        System.out.println(video);
+        row.add(1,parts[0]);
+      }
+      else {
+        row.add(1, row.get(0));
+      }
+    }
+    
+    writeToCSV(data, "test.csv");
   }
   
   private static List<List<String>> filterRelationship(List<List<String>> data, int insertIndex, int videoIndex1, int videoIndex2) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
@@ -427,7 +453,7 @@ public class HelloAnalyticsApiSample {
    * @throws SAXException 
    * @throws XPathExpressionException 
    */
-  private static GaData filterMovie(GaData data, int insertIndex) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+  private static GaData filterIsMovie(GaData data, int insertIndex) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
     //Get list of movies
     NodeList nodeList = getNodes(DATASET, "OAI-PMH/ListRecords/record/metadata//*[name()='oai_oi:oi']//*[name()='oi:attributionURL']");   
     ArrayList<String> dataset = new ArrayList<String>();    
