@@ -153,7 +153,7 @@ public class HelloAnalyticsApiSample {
         System.err.println("No profiles found.");
       } else {
 
-        filterMovies(loadCSV("table1.csv"));
+//        filterMovies(loadCSV("table2.csv"),9);
 
         //writeToCSV(filterTags(loadCSV("table1.csv"), 9), "test.csv");
         
@@ -163,7 +163,7 @@ public class HelloAnalyticsApiSample {
 //        System.out.println("Total number of different pagepath/nextpagepath: " + indices.size());
 //        System.out.println("Indices of the different ones: " + indices.toString());
 //        
-//        int table = 3;
+        int table = 1;
 //        String writeToFile = "test.csv";
 //
 //// Filter relationships        
@@ -171,12 +171,16 @@ public class HelloAnalyticsApiSample {
 ////        writeToCSV(filterRelationship(loadCSV(table3), HASRELATIONSHIP_INDEX1_TABLE3, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX), nameWriteFile);
 ////        writeToCSV(filterRelationship(loadCSV(nameWriteFile), HASRELATIONSHIP_INDEX2_TABLE3, PAGEPATHINDEX, NEXTPAGEPATHINDEX), nameWriteFile2);
 //        
-//        GaData data;
+        GaData data = null;
 //        
-//        if (table == 1) {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
+        if (table == 1) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
+        printGaData(data);
+        printQueryInfo(data);
+        printPaginationInfo(data);
+        printResponseInfo(data);
 //          filterMovie(data, ISMOVIE_INDEX_TABLE1);  
-//        }
+        }
 //        else if (table == 2) {
 //          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
 //          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
@@ -192,29 +196,30 @@ public class HelloAnalyticsApiSample {
 //        }  
 //
 //        writeToCSV(data, writeToFile);
-//////        printGaData(data);
-//////        printQueryInfo(data);
-//////        printPaginationInfo(data);
-//////        printResponseInfo(data);
+//        printGaData(data);
+//        printQueryInfo(data);
+//        printPaginationInfo(data);
+//        printResponseInfo(data);
 //        HttpRequestFactory factory = analytics.getRequestFactory();
 //        while (data.getNextLink() != null) 
 //        {
 //          GenericUrl url = new GenericUrl(data.getNextLink());
+//          System.out.println(data.getNextLink());
 //          HttpResponse response = factory.buildGetRequest(url).execute();
 //          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
 //          if (table == 1) {
-//            filterMovie(data, ISMOVIE_INDEX_TABLE1);
+////            filterMovie(data, ISMOVIE_INDEX_TABLE1);
 //          }
 //          else if (table == 2) {
-//          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
-//          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
+////          filterMovie(data, ISMOVIE_INDEX1_TABLE2);
+////          filterMovie(data, ISMOVIE_INDEX2_TABLE2);
+////          filterMovie(data, ISMOVIE_INDEX3_TABLE2);
 //          filterRelationship(data, HASRELATIONSHIP_INDEX_TABLE2, LANDINGPAGEPATHINDEX, SECONDPAGEPATHINDEX);
 //          }
 //          else {
-//            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
-//            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
-//            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
+////            filterMovie(data, ISMOVIE_INDEX1_TABLE3);
+////            filterMovie(data, ISMOVIE_INDEX2_TABLE3);
+////            filterMovie(data, ISMOVIE_INDEX3_TABLE3);
 //          }
 //
 //          writeToCSV(data, writeToFile);
@@ -270,24 +275,24 @@ public class HelloAnalyticsApiSample {
     return result;
   }
   
-  private static void filterMovies(List<List<String>> data) throws IOException {
+  private static void filterMovies(List<List<String>> data, int insertIndex) throws IOException {
     List<String> columnHeaders = data.get(0);
     System.out.println("Columnheaders: " + columnHeaders.get(0));
     String header = "movieId";
-    columnHeaders.add(1, header);
+    columnHeaders.add(insertIndex, header);
     data.set(0, columnHeaders);
     
     for (int i = 1; i < data.size(); i++) {
       List<String> row = data.get(i);
-      if (row.get(1).equals("Yes")) {
-        String video = row.get(0);
+      if (row.get(insertIndex).equals("Yes")) {
+        String video = row.get(insertIndex-1);
         String[] parts = video.split("/");
         parts = parts[2].split("\\.");
         System.out.println(video);
-        row.add(1,parts[0]);
+        row.add(insertIndex,parts[0]);
       }
       else {
-        row.add(1, row.get(0));
+        row.add(insertIndex, row.get(insertIndex-1));
       }
     }
     
