@@ -186,9 +186,11 @@ public class HelloAnalyticsApiSample {
 //        writeToCSV(filterIsMovie(loadCSV("table2.csv"),Arrays.asList(ISMOVIE_INDEX1_TABLE2, ISMOVIE_INDEX2_TABLE2, ISMOVIE_INDEX3_TABLE2)),"table2withIsMovie.csv");
 //        writeToCSV(filterIsMovie(loadCSV("table3.csv"),Arrays.asList(ISMOVIE_INDEX1_TABLE3, ISMOVIE_INDEX2_TABLE3)),"table3withIsMovie.csv");
         
-        writeToCSV(filterMovieId(loadCSV("table1withIsMovie.csv"), Arrays.asList(0)), "table1withMovieId.csv");
-        writeToCSV(filterMovieId(loadCSV("table2withIsMovie.csv"), Arrays.asList(1,3,5)), "table2withMovieId.csv");
-        writeToCSV(filterMovieId(loadCSV("table3withIsMovie.csv"), Arrays.asList(0,4)), "table3withMovieId.csv");
+//        writeToCSV(filterMovieId(loadCSV("table1withIsMovie.csv"), Arrays.asList(0)), "table1withMovieId.csv");
+//        writeToCSV(filterMovieId(loadCSV("table2withIsMovie.csv"), Arrays.asList(1,3,5)), "table2withMovieId.csv");
+//        writeToCSV(filterMovieId(loadCSV("table3withIsMovie.csv"), Arrays.asList(0,4)), "table3withMovieId.csv");
+
+          writeToCSV(filterRelationship(loadCSV("table3withMovieId.csv"), 6, 0, 4),"table3withRelationship.csv");
       }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
@@ -329,7 +331,7 @@ public class HelloAnalyticsApiSample {
       
       if (row.get(videoIndex1+1).equals("Yes") && row.get(videoIndex2+1).equals("Yes")) {
       ArrayList<String> relationship = new ArrayList<String>();
-      relationship = hasRelationship(rewriteTagUrl(row.get(videoIndex1)), rewriteTagUrl(row.get(videoIndex2)));
+      relationship = hasRelationship(row.get(videoIndex1), row.get(videoIndex2));
       String relationships = "";
       
       if (relationship.size() > 0) {
