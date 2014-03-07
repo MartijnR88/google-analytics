@@ -1,17 +1,3 @@
-/*
- * Copyright (c) 2012 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
- */
-
 package com.google.api.services.samples.analytics.cmdline;
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -63,20 +49,18 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-
 /**
- * This is a basic hello world sample for the Google Analytics API. It is designed to run from the
- * command line and will prompt a user to grant access to their data. Once complete, the sample will
+ * This is a file to retrieve Google Analytics data. Once complete, it will
  * traverse the Management API hierarchy by going through the authorized user's first account, first
  * web property, and finally the first profile and retrieve the first profile id. This ID is then
- * used with the Core Reporting API to retrieve the top 25 organic search terms.
+ * used with the Core Reporting API to retrieve the top X organic search terms.
  *
- * @author
+ * @author 
  */
 public class HelloAnalyticsApiSample {
 
   /**
-   * Be sure to specify the name of your application. If the application name is {@code null} or
+   * Be sure to specify the name of the application. If the application name is {@code null} or
    * blank, the application will log a warning. Suggested format is "MyCompany-ProductName/1.0".
    */
   private static final String APPLICATION_NAME = "Thesis";
@@ -101,44 +85,45 @@ public class HelloAnalyticsApiSample {
   private static final String METRICS_TABLE1 = "ga:visits,ga:visitors,ga:timeOnPage,ga:avgTimeOnPage,ga:pageviews";
   /**Maximum of 7 dimensions per request */
   private static final String DIMENSIONS_TABLE1 = "ga:pagepath,ga:date,ga:visitlength,ga:city";
+  /** Index of column where to insert the IsMovie? column, the first column has index 0 */
   private static final int ISMOVIE_INDEX_TABLE1 = 1;
   
   /**Maximum of 10 metrics per request */
   private static final String METRICS_TABLE2 = "ga:visits, ga:visitors, ga:pageviews, ga:uniquepageviews,ga:bounces";
   /**Maximum of 7 dimensions per request */
   private static final String DIMENSIONS_TABLE2 = "ga:date, ga:landingpagepath, ga:secondpagepath, ga:exitpagepath,ga:city,ga:visitLength";
+  /** Indices of columns where to insert the IsMovie? columns, the first column has index 0 */
   private static final int ISMOVIE_INDEX1_TABLE2 = 2;
   private static final int ISMOVIE_INDEX2_TABLE2 = 4;
   private static final int ISMOVIE_INDEX3_TABLE2 = 6;
-  private static final int LANDINGPAGEPATHINDEX = 1;
-  private static final int SECONDPAGEPATHINDEX = 3;
-  private static final int HASRELATIONSHIP_INDEX_TABLE2 = 5;
   
   /**Maximum of 10 metrics per request */
   private static final String METRICS_TABLE3 = "ga:visits, ga:visitors, ga:pageviews";
   /**Maximum of 7 dimensions per request */
   private static final String DIMENSIONS_TABLE3 = "ga:pagepath, ga:date, ga:visitLength, ga:previousPagePath, ga:city";
+  /** Indices of columns where to insert the IsMovie? columns, the first column has index 0 */
   private static final int ISMOVIE_INDEX1_TABLE3 = 1;
   private static final int ISMOVIE_INDEX2_TABLE3 = 5;
+  /** Indices to indicate which column contains the pagepath and which contains the previous pagepath, used to calculate if they are related */
   private static final int PAGEPATHINDEX = 0;
   private static final int PREVIOUSPAGEPATHINDEX = 4;
-  private static final int NEXTPAGEPATHINDEX = 8;
-  private static final int HASRELATIONSHIP_INDEX1_TABLE3 = 6;
-  private static final int HASRELATIONSHIP_INDEX2_TABLE3 = 10;
+  /** Indices of columns where to insert the HasRelationship column, the first column has index 0 */
+  private static final int HASRELATIONSHIPINDEX = 6;
   
+  /** The maximum number of results per page */
   private static final int MAX_RESULTS = 10000;
   private static final String BEGIN_DATE = "2009-01-01";
   private static final String END_DATE = "2013-12-31";
 
+  /** Dataset of OpenBeelden, used to determine if a pagepath is a movie */
   private static final String DATASET = "dataset.xml";
-  /** Got it via: http://www.openbeelden.nl/feeds/tags-html.jspx */
+  /** Tags belonging to the dataset, got it via: http://www.openbeelden.nl/feeds/tags-html.jspx */
   private static final String TAGS = "tags.xml";
   
   /**
-   * Main demo. This first initializes an analytics service object. It then uses the Google
+   * Main. This first initializes an analytics service object. It then uses the Google
    * Analytics Management API to get the first profile ID for the authorized user. It then uses the
-   * Core Reporting API to retrieve the top 25 organic search terms. Finally the results are printed
-   * to the screen. If an API error occurs, it is printed here.
+   * Core Reporting API to retrieve the top X organic search terms. Finally the results are written to a file. If an API error occurs, it is printed here.
    *
    * @param args command line args.
    */
@@ -151,46 +136,66 @@ public class HelloAnalyticsApiSample {
       if (profileId == null) {
         System.err.println("No profiles found.");
       } else {
-//        int table = 3;
-//        String writeToFile = "table" + table + ".csv";
-//        GaData data = null;
-//        
-//        if (table == 1) {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
-//        }
-//        else if (table == 2) {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
-//        }
-//        else {
-//          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
-//        } 
-//        
-//        printGaData(data);
-//        printQueryInfo(data);
-//        printPaginationInfo(data);
-//        printResponseInfo(data);
-//
-//        writeToCSV(data, writeToFile);
-//        
-//        HttpRequestFactory factory = analytics.getRequestFactory();
-//        while (data.getNextLink() != null) 
-//        {
-//          GenericUrl url = new GenericUrl(data.getNextLink());
-//          System.out.println(data.getNextLink());
-//          HttpResponse response = factory.buildGetRequest(url).execute();
-//          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
-//          writeToCSV(data, writeToFile);
-//        }
+        //Number of table to generate
+        int table = 3;
+        String writeToFile = "table" + table + ".csv";
+        GaData data = null;
         
-//        writeToCSV(filterIsMovie(loadCSV("table1.csv"),Arrays.asList(ISMOVIE_INDEX_TABLE1)),"table1withIsMovie.csv");
-//        writeToCSV(filterIsMovie(loadCSV("table2.csv"),Arrays.asList(ISMOVIE_INDEX1_TABLE2, ISMOVIE_INDEX2_TABLE2, ISMOVIE_INDEX3_TABLE2)),"table2withIsMovie.csv");
-//        writeToCSV(filterIsMovie(loadCSV("table3.csv"),Arrays.asList(ISMOVIE_INDEX1_TABLE3, ISMOVIE_INDEX2_TABLE3)),"table3withIsMovie.csv");
+        //Execute query for the specified table
+        if (table == 1) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE1, DIMENSIONS_TABLE1);
+        }
+        else if (table == 2) {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE2, DIMENSIONS_TABLE2);
+        }
+        else {
+          data = executeDataQuery(analytics, profileId, BEGIN_DATE, END_DATE, METRICS_TABLE3, DIMENSIONS_TABLE3);
+        } 
         
-//        writeToCSV(filterMovieId(loadCSV("table1withIsMovie.csv"), Arrays.asList(0)), "table1withMovieId.csv");
-//        writeToCSV(filterMovieId(loadCSV("table2withIsMovie.csv"), Arrays.asList(1,3,5)), "table2withMovieId.csv");
-//        writeToCSV(filterMovieId(loadCSV("table3withIsMovie.csv"), Arrays.asList(0,4)), "table3withMovieId.csv");
-
-          writeToCSV(filterRelationship(loadCSV("table3withMovieId.csv"), 6, 0, 4),"table3withRelationship.csv");
+        //Print metadata for the query
+        printGaData(data);
+        printQueryInfo(data);
+        printPaginationInfo(data);
+        printResponseInfo(data);
+        
+        //Write gathered data to CSV
+        writeToCSV(data, writeToFile);
+        
+        //Get all results, since the maximum number of results per page are 10000
+        HttpRequestFactory factory = analytics.getRequestFactory();
+        while (data.getNextLink() != null) 
+        {
+          GenericUrl url = new GenericUrl(data.getNextLink());
+          System.out.println(data.getNextLink());
+          HttpResponse response = factory.buildGetRequest(url).execute();
+          data = data.getFactory().fromString(response.parseAsString(), GaData.class);
+          writeToCSV(data, writeToFile);
+        }
+        
+        //Execute isMovieFilter
+        if (table == 1) {
+          writeToCSV(filterIsMovie(loadCSV("table1.csv"),Arrays.asList(ISMOVIE_INDEX_TABLE1)),"table1withIsMovie.csv");  
+        }
+        else if (table == 2) {
+          writeToCSV(filterIsMovie(loadCSV("table2.csv"),Arrays.asList(ISMOVIE_INDEX1_TABLE2, ISMOVIE_INDEX2_TABLE2, ISMOVIE_INDEX3_TABLE2)),"table2withIsMovie.csv");  
+        }
+        else {
+          writeToCSV(filterIsMovie(loadCSV("table3.csv"),Arrays.asList(ISMOVIE_INDEX1_TABLE3, ISMOVIE_INDEX2_TABLE3)),"table3withIsMovie.csv");  
+        }
+       
+        //Execute movieIdFilter, this changes the pagepaths to the movieIndexNumbers from the dataset of OpenBeelden. The numbers are the indices of the columns containing the paths in the table.
+        if (table == 1){
+          writeToCSV(filterMovieId(loadCSV("table1withIsMovie.csv"), Arrays.asList(0)), "table1withMovieId.csv");  
+        }
+        else if (table == 2) {
+          writeToCSV(filterMovieId(loadCSV("table2withIsMovie.csv"), Arrays.asList(1,3,5)), "table2withMovieId.csv");  
+        }
+        else {
+          writeToCSV(filterMovieId(loadCSV("table3withIsMovie.csv"), Arrays.asList(PAGEPATHINDEX,PREVIOUSPAGEPATHINDEX)), "table3withMovieId.csv");  
+        }  
+        
+        //Execute hasRelationship filter. 
+        writeToCSV(filterRelationship(loadCSV("table3withMovieId.csv"), HASRELATIONSHIPINDEX, PAGEPATHINDEX, PREVIOUSPAGEPATHINDEX),"table3withRelationship.csv");
       }
     } catch (GoogleJsonResponseException e) {
       System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
@@ -201,6 +206,7 @@ public class HelloAnalyticsApiSample {
   }
   
   @SuppressWarnings("resource")
+  /** Loads a CSV in a matrix of Strings*/
   private static List<List<String>> loadCSV(String filename) throws IOException {
     List<List<String>> result = new ArrayList<List<String>>();
     String line = "";
@@ -221,34 +227,37 @@ public class HelloAnalyticsApiSample {
     return result;
   }
   
+  /** Write results to CSV, when the results are in the form List<List<String>> which is the case after reading from CSV */
   private static void writeToCSV(List<List<String>> results, String filename) throws IOException {
     boolean created = false;
     File file = new File(filename);
     
+    //Create new file, if it doesn't exist
     if (!file.exists()) {
       file.createNewFile();
       created = true;
     }
     
     FileWriter writer = new FileWriter(file.getName(), true);
-    //TODO: Check if rows are not empty.
     if (results.size() == 0) {
       System.out.println("No results Found.");
     }
+    
     else {
       if (created) {
+      //First print all headers, where "," are replaced by ";" because it is written to CSV
         for (String header : results.get(0)) {
           writer.append(header.replaceAll(",", ";") + ",");
         }
         writer.append('\n');
       }
       
+      //Print row per row
       List<List<String>> rows = results;
       for (int i = 1; i < rows.size(); i++) {
         List<String> row = rows.get(i);
         for (String column : row) {
           writer.append(column.replaceAll(",", ";") + ",");
-          System.out.println(column.replaceAll(",", ";") + "," + "/n");
         }
         writer.append('\n');
         System.out.println("Appended row: " + i + "of " + rows.size() + " rows");
@@ -259,6 +268,7 @@ public class HelloAnalyticsApiSample {
     writer.close();
   }
   
+  /** Same writeToCSV function as above, except that the input is GaData, which is the object that results from a Google Analytics query */
   private static void writeToCSV(GaData results, String filename) throws IOException{
     boolean created = false;
     File file = new File(filename);
@@ -292,123 +302,7 @@ public class HelloAnalyticsApiSample {
     writer.close();
   }
   
-  private static List<List<String>> filterMovieId(List<List<String>> data, List<Integer> insertIndex) throws IOException {
-    for (int j = 0; j < insertIndex.size(); j++) {
-      int insert = insertIndex.get(j);
-      
-      for (int i = 1; i < data.size(); i++) {
-        List<String> row = data.get(i);
-        if (row.get(insert+1).equals("Yes")) {
-          String video = row.get(insert);
-          String[] parts = video.split("/");
-          parts = parts[2].split("\\.");
-          System.out.println(video);
-          row.set(insert,parts[0]);
-        }
-      }
-    }
-    
-    return data;
-  }
-  
-  private static List<List<String>> filterRelationship(List<List<String>> data, int insertIndex, int videoIndex1, int videoIndex2) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
-    List<String> columnHeaders = data.get(0);
-    System.out.println("Columnheaders: " + columnHeaders.get(0));
-    String header = "hasRelationship";
-    String header2 = "relationship";
-    columnHeaders.add(insertIndex, header);
-    columnHeaders.add(insertIndex+1, header2);
-    data.set(0, columnHeaders);
-    
-    System.out.println("Updated columnheaders");
-    
-    List<List<String>> rows = data;
-    
-    //Begins with 1, because the 0th row are the columnheaders
-    for (int i = 1; i < rows.size(); i++) {
-      List<String> row = rows.get(i);
-      System.out.println("Updating row: " + i + " of " + rows.size() + " rows");
-      
-      if (row.get(videoIndex1+1).equals("Yes") && row.get(videoIndex2+1).equals("Yes")) {
-      ArrayList<String> relationship = new ArrayList<String>();
-      relationship = hasRelationship(row.get(videoIndex1), row.get(videoIndex2));
-      String relationships = "";
-      
-      if (relationship.size() > 0) {
-        row.add(insertIndex, "True");
-        for (int j = 0; j < relationship.size(); j++){
-          relationships = relationships + relationship.get(j) + "; ";
-        }
-        row.add(insertIndex+1, relationships);
-      }
-      else {
-        row.add(insertIndex, "False");
-        row.add(insertIndex+1, "null");
-      }      
-      }
-      
-      else {
-        row.add(insertIndex, "False");
-        row.add(insertIndex+1, "null");
-      }
-      System.out.println("Row: " + row.toString() + "\n");
-    }
-    
-    System.out.println("Rows updated");
-    
-    return data;
-  }
-  
-  private static ArrayList<String> hasRelationship(String attributionURLvideo1, String attributionURLvideo2) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-    ArrayList<String> results = new ArrayList<String>();
-    NodeList nodes = getNodes(TAGS, "tags/tag");
-
-    for (int i = 0; i < nodes.getLength(); i++) {
-      Node tag = nodes.item(i);
-      
-      if (tag.getNodeType() == Node.ELEMENT_NODE) {
-        Element firstTag = (Element)tag;
-        NodeList videos = firstTag.getElementsByTagName("video");
-        ArrayList<String> videoNumbers = new ArrayList<String>();
-        
-        for (int j = 0; j < videos.getLength(); j++){
-          Node video = videos.item(j);
-          
-          if (video.getNodeType() == Node.ELEMENT_NODE) {
-            Element firstVideo = (Element)video;
-            String videoNumber = firstVideo.getAttribute("number");
-            videoNumbers.add(videoNumber);
-          }
-        }
-        
-        if (videoNumbers.contains(attributionURLvideo1) && videoNumbers.contains(attributionURLvideo2) && !attributionURLvideo1.equals(attributionURLvideo2)) {
-          results.add(firstTag.getElementsByTagName("name").item(0).getChildNodes().item(0).getNodeValue());
-        }
-      }
-    }
-
-    return results;
-  }
-
-  private static NodeList getNodes(String dataset, String expression) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-    DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();   
-    domFactory.setIgnoringComments(true);
-    DocumentBuilder builder = domFactory.newDocumentBuilder();
-    Document doc = builder.parse(new File(dataset));
-    XPath xPath = XPathFactory.newInstance().newXPath();
-    NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(doc,XPathConstants.NODESET);
-    return nodeList;
-  }
-
-  /**
-   * @param data
-   * @param list the index where to insert the column about movies
-   * @return 
-   * @throws ParserConfigurationException 
-   * @throws IOException 
-   * @throws SAXException 
-   * @throws XPathExpressionException 
-   */
+  /** Is Movie Filter */
   private static List<List<String>> filterIsMovie(List<List<String>> data, List<Integer> list) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
     //Get list of movies
     NodeList nodeList = getNodes(DATASET, "OAI-PMH/ListRecords/record/metadata//*[name()='oai_oi:oi']//*[name()='oi:attributionURL']");   
@@ -452,10 +346,135 @@ public class HelloAnalyticsApiSample {
     return data;
   }
 
-  /**
-   * @param url
-   * @return
-   */
+  /** Movie Id Filter */
+  private static List<List<String>> filterMovieId(List<List<String>> data, List<Integer> insertIndex) {
+    //Insert Movie Id everywhere necessary, so everywhere for which an insertIndex is given
+    for (int j = 0; j < insertIndex.size(); j++) {
+      int insert = insertIndex.get(j);
+      
+      //Get data
+      for (int i = 1; i < data.size(); i++) {
+        List<String> row = data.get(i);
+        //If isMovie is yes, the URL is a movie, so strip the index from the URL
+        if (row.get(insert+1).equals("Yes")) {
+          String video = row.get(insert);
+          String[] parts = video.split("/");
+          parts = parts[2].split("\\.");
+          System.out.println(video);
+          row.set(insert,parts[0]);
+        }
+      }
+    }
+    
+    return data;
+  }
+  
+  /** HasRelationship (by tags) Filter */
+  private static ArrayList<String> hasRelationship(String attributionURLvideo1, String attributionURLvideo2) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    ArrayList<String> results = new ArrayList<String>();
+    //Get tags
+    NodeList nodes = getNodes(TAGS, "tags/tag");
+
+    for (int i = 0; i < nodes.getLength(); i++) {
+      //Get a tag
+      Node tag = nodes.item(i);
+      
+      if (tag.getNodeType() == Node.ELEMENT_NODE) {
+        Element firstTag = (Element)tag;
+        NodeList videos = firstTag.getElementsByTagName("video");
+        ArrayList<String> videoNumbers = new ArrayList<String>();
+        
+        //For every video for a certain tag, add the video number
+        for (int j = 0; j < videos.getLength(); j++){
+          Node video = videos.item(j);
+          
+          if (video.getNodeType() == Node.ELEMENT_NODE) {
+            Element firstVideo = (Element)video;
+            String videoNumber = firstVideo.getAttribute("number");
+            videoNumbers.add(videoNumber);
+          }
+        }
+        
+        //If all video numbers are added for a tag, check if two videos share that tag
+        if (videoNumbers.contains(attributionURLvideo1) && videoNumbers.contains(attributionURLvideo2) && !attributionURLvideo1.equals(attributionURLvideo2)) {
+          results.add(firstTag.getElementsByTagName("name").item(0).getChildNodes().item(0).getNodeValue());
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /** Relationship filter */
+  private static List<List<String>> filterRelationship(List<List<String>> data, int insertIndex, int videoIndex1, int videoIndex2) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+    //Add headers
+    List<String> columnHeaders = data.get(0);
+    System.out.println("Columnheaders: " + columnHeaders.get(0));
+    String header = "hasRelationship";
+    String header2 = "relationship";
+    columnHeaders.add(insertIndex, header);
+    columnHeaders.add(insertIndex+1, header2);
+    data.set(0, columnHeaders);
+    
+    System.out.println("Updated columnheaders");
+    
+    List<List<String>> rows = data;
+    
+    //Begins with 1, because the 0th row are the columnheaders
+    for (int i = 1; i < rows.size(); i++) {
+      List<String> row = rows.get(i);
+      System.out.println("Updating row: " + i + " of " + rows.size() + " rows");
+      
+      //Only if both "items" are videos we need to check
+      if (row.get(videoIndex1+1).equals("Yes") && row.get(videoIndex2+1).equals("Yes")) {
+      ArrayList<String> relationship = new ArrayList<String>();
+      relationship = hasRelationship(row.get(videoIndex1), row.get(videoIndex2));
+      String relationships = "";
+      
+      //If relationship contains multiple tags, the videos are related
+      if (relationship.size() > 0) {
+        row.add(insertIndex, "True");
+        //Print all tags, via which they are related
+        for (int j = 0; j < relationship.size(); j++){
+          relationships = relationships + relationship.get(j) + "; ";
+        }
+        row.add(insertIndex+1, relationships);
+      }
+      //They don't share a tag, so they are not related
+      else {
+        row.add(insertIndex, "False");
+        row.add(insertIndex+1, "null");
+      }      
+      }
+      
+      //They are not related because one or both URLs is not a video
+      else {
+        row.add(insertIndex, "False");
+        row.add(insertIndex+1, "null");
+      }
+      System.out.println("Row: " + row.toString() + "\n");
+    }
+    
+    System.out.println("Rows updated");
+    
+    return data;
+  }
+
+
+  /** Helper class to get Nodes from the dataset (XML-format), used for isMovie Filter and HasRelationship Filter */
+  private static NodeList getNodes(String dataset, String expression) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();   
+    domFactory.setIgnoringComments(true);
+    DocumentBuilder builder = domFactory.newDocumentBuilder();
+    //Parse dataset
+    Document doc = builder.parse(new File(dataset));
+    XPath xPath = XPathFactory.newInstance().newXPath();
+    //Get nodeList from the specified expression
+    NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(doc,XPathConstants.NODESET);
+    return nodeList;
+  }
+
+  /** Rewrite the URLs gathered from Google Analytics to the same format as the URLs in the dataset from OpenBeelden */
   private static String rewriteGAUrl(String url) {
     String result = "";    
     String[] results = url.split("/");
@@ -463,13 +482,7 @@ public class HelloAnalyticsApiSample {
     if (results.length > 1) {
       if (results.length > 2) {
         String[] tempresult = results[2].split("\\.");
-        //if (tempresult.length > 1) {
-        //  System.out.println("Result: " + tempresult[0]);
           result = results[1] + "/" + tempresult[0];
-        //}
-        //else {
-        //  result = results[1] + "/" + results[2];
-        //}
       }
       
       else {
@@ -483,10 +496,7 @@ public class HelloAnalyticsApiSample {
     return result;
   }
 
-  /**
-   * @param url
-   * @return
-   */
+  /** Rewrite the URLs from OpenBeelden, so instead of http://openbeelden.nl/media/637704 it will become media/637704 for example */
   private static String rewriteOpenImagesUrl(String url) {
     String result = "";    
     String[] results = url.split("/");
@@ -494,12 +504,6 @@ public class HelloAnalyticsApiSample {
     return result;
   }
   
-  private static String rewriteTagUrl(String url) {
-    String[] results = url.split("/");  
-    return results[2];
-  }
-
-
   /** Authorizes the installed application to access user's protected data. */
   private static Credential authorize() throws Exception {
     // load client secrets
@@ -639,6 +643,11 @@ public class HelloAnalyticsApiSample {
     }
   }
   
+  /**
+   * Prints the Response info.
+   *
+   * @param results data returned from the Core Reporting API.
+   */
   private static void printResponseInfo(GaData gaData) {
     System.out.println("Contains Sampled Data: " + gaData.getContainsSampledData());
     System.out.println("Kind: " + gaData.getKind());
@@ -646,6 +655,11 @@ public class HelloAnalyticsApiSample {
     System.out.println("Self link: " + gaData.getSelfLink());
   }
   
+  /**
+   * Prints the Query info.
+   *
+   * @param results data returned from the Core Reporting API.
+   */
   private static void printQueryInfo(GaData gaData) {
     Query query = gaData.getQuery();
 
@@ -661,6 +675,11 @@ public class HelloAnalyticsApiSample {
     System.out.println("Max Results: " + query.getMaxResults());
   }
   
+  /**
+   * Prints the Pagination info.
+   *
+   * @param results data returned from the Core Reporting API.
+   */
   private static void printPaginationInfo(GaData gaData) {
     System.out.println("Items Per Page: " + gaData.getItemsPerPage());
     System.out.println("Total Results: " + gaData.getTotalResults());
